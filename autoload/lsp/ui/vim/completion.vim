@@ -5,7 +5,7 @@ let s:context = {}
 function! lsp#ui#vim#completion#_setup() abort
   augroup lsp_ui_vim_completion
     autocmd!
-    autocmd CompleteDone * call s:on_complete_done()
+    autocmd CompleteChanged * call s:on_complete_changed()
   augroup END
 endfunction
 
@@ -16,7 +16,7 @@ function! lsp#ui#vim#completion#_disable() abort
 endfunction
 
 "
-" After CompleteDone, v:complete_item's word has been inserted into the line.
+" After CompleteChanged, v:complete_item's word has been inserted into the line.
 " Yet not inserted commit characters.
 "
 " below example uses | as cursor position.
@@ -25,10 +25,10 @@ endfunction
 " 2. select `getbufline` item.
 " 3. Insert commit characters. e.g. `(`
 " 4. fire CompleteDone, then the line is `call getbufline|`
-" 5. call feedkeys to call `s:on_complete_done_after`
-" 6. then the line is `call getbufline(|` in `s:on_complete_done_after`
+" 5. call feedkeys to call `s:on_complete_changed_after`
+" 6. then the line is `call getbufline(|` in `s:on_complete_changed_after`
 "
-function! s:on_complete_done() abort
+function! s:on_complete_changed() abort
   " Sometimes, vim occurs `CompleteDone` unexpectedly.
   " We try to detect it by checking empty completed_item.
   if empty(v:completed_item) || get(v:completed_item, 'word', '') ==# '' && get(v:completed_item, 'abbr', '') ==# ''
@@ -56,13 +56,13 @@ function! s:on_complete_done() abort
   let s:context['completion_item'] = l:managed_user_data['completion_item']
   let s:context['start_character'] = l:managed_user_data['start_character']
   let s:context['complete_word'] = l:managed_user_data['complete_word']
-  call feedkeys(printf("\<C-r>=<SNR>%d_on_complete_done_after()\<CR>", s:SID()), 'n')
+  call feedkeys(printf("\<C-r>=<SNR>%d_on_complete_changed_after()\<CR>", s:SID()), 'n')
 endfunction
 
 "
 " Apply textEdit or insertText(snippet) and additionalTextEdits.
 "
-function! s:on_complete_done_after() abort
+function! s:on_complete_changed_after() abort
   " Clear message line. feedkeys above leave garbage on message line.
   echo ''
 
